@@ -1,0 +1,162 @@
+<% include layout/header %>
+
+  <div class="main">
+    <% include layout/nav %>
+      <div class="container-fluid">
+        <div class="page-title">
+          <h1>分类目录</h1>
+        </div>
+        <!-- 有错误信息时展示 -->
+        <!-- <div class="alert alert-danger">
+        <strong>错误！</strong>发生XXX错误
+      </div> -->
+        <div class="row">
+          <div class="col-md-4">
+            <form id="form">
+              <h2>添加新分类目录</h2>
+              <div class="form-group">
+                <label for="name">名称</label>
+                <input id="name" class="form-control" name="name" type="text" placeholder="分类名称">
+              </div>
+              <div class="form-group">
+                <label for="slug">别名</label>
+                <input id="slug" class="form-control" name="slug" type="text" placeholder="slug">
+                <p class="help-block"><strong>slug</strong></p>
+              </div>
+              <div class="form-group">
+                <input class="btn btn-primary" id="btnAdd" type="button" value="添加" />
+              </div>
+            </form>
+          </div>
+          <form action=""></form>
+        </div>
+      </div>
+  </div>
+
+  <% include layout/aside %>
+    <% include layout/footer %>
+      <!-- 添加一个列表模板 -->
+      <script id="tmp" type="text/html">
+        {{each data}}
+        <tr>
+          <td class="text-center"><input type="checkbox"></td>
+          <td>{{$value.name}}</td>
+          <td>{{$value.slug}}</td>
+          <td class="text-center">
+            <a href="javascript:;" id = {{$value.id}} class="btn btn-info btn-xs">编辑</a>
+            <a href="javascript:;" id = {{$value.id}} class="btn btn-danger btn-xs">删除</a>
+          </td>
+        </tr>
+        {{/each}}
+      </script>
+      <script id="itemp" type="text/html">
+        <h2>添加新分类目录</h2>
+        <div class="form-group">
+          <label for="name">名称</label>
+          <input id="name" class="form-control" name="name" type="text" placeholder="分类名称" value = "{{name}}">
+        </div>
+        <div class="form-group">
+          <label for="slug">别名</label>
+          <input id="slug" class="form-control" name="slug" value="{{slug}}" type="text" placeholder="slug">
+          <p class="help-block"><strong>slug</strong></p>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-primary " type="submit" id={{id}}>修改</button>
+        </div>
+      </script>
+      <script>
+        // 当页面打开时需要加载数据
+        // 将数据渲染到浏览器
+        function getCategoryData() {
+          $.ajax({
+            url: '/getAllData',
+            method: 'GET',
+            success: function (res) {
+              let { status, data, msg } = res
+              if (status === 200) {
+                // 渲染模板
+                let html = template('tmp', res)
+                $("#tbody").html(html)
+              } else {
+                alert(msg)
+              }
+            }
+          })
+        }
+        getCategoryData()
+      $("#form").on("click","#btnAdd", function(event){
+        event.preventDefault()
+        let params = $("#form").serialize()
+        $.ajax({
+          type:"POST",
+          url:"/addCategories",
+          data:params,
+          success:result=>{
+            let {status,msg} = result
+            if(status===200){
+              alert(msg)
+              getCategoryData()
+            }
+          }
+        })
+      })
+    $("tbody").on("click",".btn-danger",function(event){
+     event.preventDefault()
+    let id = $(this).attr("id")
+      $.ajax({
+        url:"/delCategories?id="+id,
+        type:"GET",
+        success:result=>{
+          let {status,msg}=result;
+          if(status === 200){
+            alert("删除成功")
+            getCategoryData()
+          }
+        }
+      })
+    })
+    $("#tbody").on("click",".btn-info",function(){
+      let id = $(this).attr("id")
+      $.ajax({
+        type:"POST",
+        url:"/Upcategories",
+        data:"id="+id,
+        success:result=>{
+          let {status,msg,data} = result;
+          console.log(data);
+          let html = template("itemp",data[0])
+        $("#form").html(html)
+        }
+      })
+    })
+    $("#tab").on("click",'#inp',function(){
+      let checked = $(this).prop("checked")
+        $("input[type='checkbox']").prop("checked",checked)
+        checked?$(".btn-danger").show():$(".btn-danger").hide()
+    })
+    $("#tab").on("click",'#tbody input',function(){
+      // 定义一个num 用于计多选框选中的个数
+      let num = 0;
+      // jquery中遍历方法
+  $("#tbody input").each((key,ele)=>{
+        // 如果元素的checked值为true num++
+          let result = $(ele).prop("checked")
+          if(result){
+            num++
+          }
+      })
+      // 如果num 的数量是两个以后 显示批量删除按钮
+      num>1?$(".btn-danger").show():$(".btn-danger").hide()
+      // 这个变量等于 tbody 下 多选框的个数
+      let length =  $("#tbody input").length
+  // 如果num++ 到 和多选框个数一样时，说明下列的多选框 checked 值全为true 
+       num === length?$("#inp").prop("checked",true):$("#inp").prop("checked",false)
+    })
+    // 给批量删除按钮设置事件
+    $("#allDel").on("click",function(event){
+      event.preventDefault()
+      var params = $('#tab').serialize()
+      
+      
+    })
+      </script>
